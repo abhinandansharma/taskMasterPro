@@ -47,21 +47,6 @@
 <img width="1768" height="1204" alt="Screenshot 2025-08-02 at 2 28 39 AM" src="https://github.com/user-attachments/assets/7b577324-8f7c-4d18-8a35-b1c465875571" />
 
 
-## 🚀 Quick Start
-
-1. Clone the repository
-```bash
-git clone https://github.com/abhinandansharma/jQuery-ToDo-App.git
-```
-
-2. Open `index.html` in your browser
-```bash
-cd jQuery-ToDo-App
-open index.html
-```
-
-3. Start managing your tasks with style! 🎉
-
 ## 🛠️ Technology Stack
 
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
@@ -71,7 +56,7 @@ open index.html
 - **Fonts**: Inter font family
 - **Storage**: localStorage for theme persistence
 
-## 🌟 Key Improvements
+## 🌟 Key improvements from the earlier minimalist version
 
 | Feature | Before | After |
 |---------|--------|-------|
