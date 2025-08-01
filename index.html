@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="assets/JS/lib/jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" href="assets/CSS/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Advanced Todo App</title>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="todo-app">
+            <header class="app-header">
+                <div class="header-top">
+                    <h1 class="app-title">
+                        <span class="title-icon">📋</span>
+                        TaskMaster Pro
+                    </h1>
+                    <div class="header-controls">
+                        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                            <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="m21 12.79a9 9 0 1 1-11.21-11.21 7 7 0 0 0 11.21 11.21z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-tasks">0</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="active-tasks">0</span>
+                        <span class="stat-label">Active</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="completed-tasks">0</span>
+                        <span class="stat-label">Completed</span>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <span class="progress-text" id="progress-text">0% Complete</span>
+                </div>
+            </header>
+
+            <div class="search-section">
+                <div class="search-container">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search tasks..." aria-label="Search tasks">
+                    <button id="clear-search" class="clear-search" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <div class="input-container">
+                    <input type="text" id="new-task-input" placeholder="What needs to be done?"
+                        aria-label="Add new task">
+                    <select id="priority-select" class="priority-select" aria-label="Task priority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                    <button id="add-task-btn" class="add-btn" aria-label="Add task">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <main class="tasks-section">
+                <ul id="task-list" class="task-list" role="list">
+                    <!-- Sample tasks for demonstration -->
+                    <li class="task-item" role="listitem">
+                        <div class="task-content">
+                            <button class="task-checkbox" aria-label="Mark as complete">
+                                <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="3">
+                                    <polyline points="20,6 9,17 4,12"></polyline>
+                                </svg>
+                            </button>
+                            <div class="task-details">
+                                <span class="task-text">Complete project documentation</span>
+                                <div class="task-meta">
+                                    <span class="priority-badge priority-high">High Priority</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="delete-btn" aria-label="Delete task">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="3,6 5,6 21,6"></polyline>
+                                <path
+                                    d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2">
+                                </path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </li>
+                    <li class="task-item" role="listitem">
+                        <div class="task-content">
+                            <button class="task-checkbox" aria-label="Mark as complete">
+                                <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="3">
+                                    <polyline points="20,6 9,17 4,12"></polyline>
+                                </svg>
+                            </button>
+                            <div class="task-details">
+                                <span class="task-text">Review code changes</span>
+                                <div class="task-meta">
+                                    <span class="priority-badge priority-medium">Medium Priority</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="delete-btn" aria-label="Delete task">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="3,6 5,6 21,6"></polyline>
+                                <path
+                                    d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2">
+                                </path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <div class="empty-icon">✨</div>
+                    <h3>All caught up!</h3>
+                    <p>You have no tasks remaining. Great job!</p>
+                </div>
+
+                <div class="no-search-results" id="no-search-results" style="display: none;">
+                    <div class="empty-icon">🔍</div>
+                    <h3>No tasks found</h3>
+                    <p>Try adjusting your search terms</p>
+                </div>
+            </main>
+
+            <footer class="app-footer">
+                <div class="filter-tabs">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="active">Active</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
+                    <button class="filter-btn" data-filter="high">High Priority</button>
+                </div>
+                <button id="clear-completed" class="clear-btn">Clear completed</button>
+            </footer>
+        </div>
+    </div>
+
+    <script src="assets/JS/app.js"></script>
+</body>
+
+</html>
