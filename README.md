@@ -36,15 +36,16 @@
 ## 🖼️ Screenshots
 
 ### Light Mode
-<img width="1768" height="1204" alt="Screenshot 2025-08-02 at 2 27 52 AM" src="https://github.com/user-attachments/assets/8c8e4e03-55ab-4338-976f-68317acc9736" />
+<img width="1252" height="906" alt="Screenshot 2025-08-12 at 7 38 20 PM" src="https://github.com/user-attachments/assets/4da591f9-54a8-4302-8b61-93f945a41f72" />
 
 
 ### Dark Mode
-<img width="1768" height="1204" alt="Screenshot 2025-08-02 at 2 28 10 AM" src="https://github.com/user-attachments/assets/1057d4a2-12a8-4dec-8db7-7d6687c421e7" />
+<img width="1252" height="906" alt="Screenshot 2025-08-12 at 7 37 22 PM" src="https://github.com/user-attachments/assets/a9b452db-5145-48a8-95f0-65ec965d8504" />
 
 
 ### Search & Filtering
-<img width="1768" height="1204" alt="Screenshot 2025-08-02 at 2 28 39 AM" src="https://github.com/user-attachments/assets/7b577324-8f7c-4d18-8a35-b1c465875571" />
+<img width="1252" height="906" alt="Screenshot 2025-08-12 at 7 38 55 PM" src="https://github.com/user-attachments/assets/4cc3be97-86c5-4c99-9772-ea8dc3bd5506" />
+
 
 
 ## 🛠️ Technology Stack
