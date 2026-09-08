@@ -1,6 +1,10 @@
 /* TaskMaster Pro — restrained, warm, fast. */
 :root {
-    --bg: #f3f2ee;
+    --bg: #ece6da;
+    --g1: rgba(245, 179, 1, 0.55);
+    --g2: rgba(255, 138, 92, 0.45);
+    --g3: rgba(120, 190, 170, 0.35);
+    --g4: rgba(255, 255, 255, 0.9);
     --card: #ffffff;
     --card-2: #f7f6f2;
     --ink: #17181a;
@@ -15,12 +19,16 @@
     --high: #d9412f;
     --medium: #e0891a;
     --low: #2f9e5b;
-    --shadow: 0 1px 2px rgba(20, 20, 20, 0.05), 0 24px 60px -30px rgba(20, 20, 20, 0.25);
+    --shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 2px 4px rgba(40, 30, 10, 0.06), 0 30px 70px -30px rgba(60, 40, 10, 0.45);
     --radius: 18px;
     --radius-sm: 10px;
 }
 [data-theme="dark"] {
-    --bg: #0f1012;
+    --bg: #0c0c0f;
+    --g1: rgba(245, 179, 1, 0.22);
+    --g2: rgba(255, 96, 60, 0.16);
+    --g3: rgba(60, 130, 150, 0.22);
+    --g4: rgba(30, 30, 36, 0.9);
     --card: #17181c;
     --card-2: #1e2025;
     --ink: #f1f0ec;
@@ -30,7 +38,7 @@
     --accent: #f5b301;
     --accent-ink: #1a1400;
     --accent-soft: rgba(245, 179, 1, 0.18);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 24px 60px -30px rgba(0, 0, 0, 0.7);
+    --shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 2px 4px rgba(0, 0, 0, 0.5), 0 40px 90px -30px rgba(0, 0, 0, 0.9);
 }
 
 * { box-sizing: border-box; }
@@ -44,13 +52,46 @@ body {
     background: var(--bg);
     -webkit-font-smoothing: antialiased;
     transition: background-color 0.25s ease, color 0.25s ease;
+    position: relative;
 }
+/* Soft, slowly drifting colour field behind the card, with a little grain so it never looks flat. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: -20%;
+    z-index: -2;
+    background:
+        radial-gradient(40% 55% at 18% 22%, var(--g1), transparent 70%),
+        radial-gradient(45% 50% at 82% 30%, var(--g2), transparent 70%),
+        radial-gradient(50% 45% at 70% 88%, var(--g3), transparent 70%),
+        radial-gradient(35% 40% at 25% 85%, var(--g4), transparent 70%);
+    filter: blur(40px);
+    animation: drift 24s ease-in-out infinite alternate;
+    transform-origin: center;
+}
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.35;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.6 0 0 0 0 0.6 0 0 0 0 0.6 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+[data-theme="dark"] body::after { mix-blend-mode: screen; opacity: 0.12; }
+@keyframes drift {
+    from { transform: translate3d(-2%, -1%, 0) rotate(-2deg) scale(1); }
+    to { transform: translate3d(2%, 2%, 0) rotate(2deg) scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
 button { font: inherit; color: inherit; cursor: pointer; }
 input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .app-container { min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: clamp(1rem, 4vw, 3rem) 1rem; }
-.todo-app { width: 100%; max-width: 560px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.todo-app { width: 100%; max-width: 560px; background: var(--card); border: 1px solid rgba(255, 255, 255, 0.7); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; position: relative; z-index: 1; }
+[data-theme="dark"] .todo-app { border-color: rgba(255, 255, 255, 0.08); }
 
 /* header */
 .app-header { padding: 1.5rem 1.5rem 1.25rem; border-bottom: 1px solid var(--line); }
