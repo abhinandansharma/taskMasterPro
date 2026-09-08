@@ -140,9 +140,10 @@ input, select { font: inherit; color: inherit; }
 .pomo-time { font-family: var(--pixel); font-size: clamp(2.6rem, 4vw, 3.6rem); line-height: 0.9; color: var(--lime); margin: 0.1rem 0 0; }
 .pomo.running .pomo-time { color: var(--paper); }
 .pomo.break .pomo-time { color: var(--sand); }
-.pomo-task { margin: 0; font-size: 0.85rem; color: var(--list-muted); overflow-wrap: anywhere; }
+.pomo-task { margin: 0; font-size: 0.85rem; line-height: 1.4; min-height: calc(2 * 1.4em); color: var(--list-muted); overflow-wrap: anywhere; }
 .pomo-task b { color: var(--paper); font-weight: 500; }
-.pomo-actions { display: flex; align-items: center; gap: 0.5rem; margin-top: auto; flex-wrap: wrap; }
+.pomo-actions { display: flex; align-items: center; gap: 0.5rem; margin-top: auto; flex-wrap: wrap; min-height: 2.4rem; }
+#pomo-start { min-width: 5.2rem; justify-content: center; }
 .pomo-today { margin-left: auto; font-size: 0.8rem; color: var(--list-muted); }
 .pomo-today b { font-family: var(--pixel); font-weight: 400; color: var(--paper); font-size: 1rem; }
 .focus-btn { flex: 0 0 auto; width: 2.1rem; height: 2.1rem; border-radius: 999px; border: 1.5px solid transparent; background: transparent; color: var(--list-muted); display: inline-grid; place-items: center; opacity: 0; transition: opacity 0.15s, border-color 0.15s, color 0.15s; }
