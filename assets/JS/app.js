@@ -1,5 +1,6 @@
 $(document).ready(function () {
     // App state
+    const STORAGE_KEY = 'taskmaster.tasks';
     let tasks = [];
     let currentFilter = 'all';
     let searchQuery = '';
@@ -29,10 +30,35 @@ $(document).ready(function () {
 
     function init() {
         loadTheme();
-        loadSampleTasks();
+        const saved = loadSavedTasks();
+        if (saved) {
+            tasks = saved;
+            $taskList.empty();
+            tasks.forEach((task) => $taskList.append(createTaskElement(task)));
+        } else {
+            loadSampleTasks();
+            $taskList.empty();
+            tasks.forEach((task) => $taskList.append(createTaskElement(task)));
+            saveTasks();
+        }
         bindEvents();
         updateStats();
-        updateUI();
+        applyFilters();
+    }
+
+    function loadSavedTasks() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function saveTasks() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch (e) { /* storage unavailable */ }
     }
 
     function loadTheme() {
@@ -132,6 +158,20 @@ $(document).ready(function () {
             deleteTask(taskId, $taskItem);
         });
 
+        // Edit a task by double-clicking its text
+        $taskList.on('dblclick', '.task-text', function () {
+            startEdit($(this).closest('.task-item'));
+        });
+        $taskList.on('click', '.edit-btn', function (e) {
+            e.stopPropagation();
+            startEdit($(this).closest('.task-item'));
+        });
+
+        // Escape clears the search box
+        $searchInput.on('keydown', function (e) {
+            if (e.key === 'Escape') { $clearSearchBtn.trigger('click'); }
+        });
+
         // Filter tasks
         $filterBtns.on('click', function () {
             const filter = $(this).data('filter');
@@ -160,6 +200,7 @@ $(document).ready(function () {
         };
 
         tasks.unshift(task); // Add to beginning of array
+        saveTasks();
 
         const $taskElement = createTaskElement(task);
         $taskElement.addClass('adding');
@@ -199,6 +240,9 @@ $(document).ready(function () {
                         </div>
                     </div>
                 </div>
+                <button class="edit-btn" aria-label="Edit task">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                </button>
                 <button class="delete-btn" aria-label="Delete task">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3,6 5,6 21,6"></polyline>
@@ -211,10 +255,41 @@ $(document).ready(function () {
         `);
     }
 
+    function startEdit($item) {
+        if ($item.hasClass('editing')) return;
+        const taskId = $item.data('task-id');
+        const task = tasks.find(t => t.id == taskId);
+        if (!task) return;
+        const $text = $item.find('.task-text');
+        const $input = $('<input type="text" class="task-edit" aria-label="Edit task">').val(task.text);
+        $item.addClass('editing');
+        $text.replaceWith($input);
+        $input.focus().select();
+
+        const finish = (commit) => {
+            const value = $input.val().trim();
+            if (commit && value && value !== task.text) {
+                task.text = value;
+                saveTasks();
+                showNotification('Task updated', 'success');
+            }
+            const $newText = $('<span class="task-text"></span>').text(task.text);
+            $input.replaceWith($newText);
+            $item.removeClass('editing');
+            applyFilters();
+        };
+        $input.on('keydown', function (e) {
+            if (e.key === 'Enter') finish(true);
+            if (e.key === 'Escape') finish(false);
+        });
+        $input.on('blur', () => finish(true));
+    }
+
     function toggleTask(taskId) {
         const task = tasks.find(t => t.id == taskId);
         if (task) {
             task.completed = !task.completed;
+            saveTasks();
 
             const $taskItem = $(`.task-item[data-task-id="${taskId}"]`);
             const $checkbox = $taskItem.find('.task-checkbox');
@@ -241,6 +316,7 @@ $(document).ready(function () {
         // Remove from tasks array after animation
         setTimeout(() => {
             tasks = tasks.filter(t => t.id != taskId);
+            saveTasks();
             $taskElement.remove();
             updateStats();
             applyFilters();
@@ -350,6 +426,7 @@ $(document).ready(function () {
         // Remove completed tasks after animation
         setTimeout(() => {
             tasks = tasks.filter(t => !t.completed);
+            saveTasks();
             completedTasks.remove();
             updateStats();
             applyFilters();
@@ -458,7 +535,7 @@ $(document).ready(function () {
         <style>
             .notification {
                 position: fixed;
-                top: 20px;
+                bottom: 20px;
                 right: 20px;
                 padding: 12px 20px;
                 border-radius: 8px;
@@ -513,8 +590,5 @@ $(document).ready(function () {
         $newTaskInput.focus();
     }, 500);
 
-    // Welcome message for new features
-    setTimeout(() => {
-        showNotification('Welcome to TaskMaster Pro! Try the new dark mode toggle! 🌙', 'info');
-    }, 1000);
+
 });
