@@ -1,104 +1,45 @@
-# 📋 TaskMaster Pro - Advanced Todo App
+# TaskMaster Pro
 
-> A modern, feature-rich task management application built with jQuery, featuring dark mode, search, priorities, and real-time statistics.
+A jQuery task manager laid out as a dashboard of colour blocks: add tasks with a priority, filter them with live counts, search with highlighting, edit inline, and run a Pomodoro focus timer that counts sessions against the task you link it to. Everything is stored in the browser and survives a reload.
 
 **Live:** https://abhinandansharma.github.io/taskMasterPro/
 
-## ✨ Features
+![TaskMaster Pro, dark mode](screenshots/dark.png)
 
-### 🎯 **Core Functionality**
-- ✅ Add, edit, and delete tasks
-- ✅ Mark tasks as complete/incomplete
-- ✅ Real-time task filtering (All, Active, Completed)
-- ✅ Bulk clear completed tasks
+## What it does
 
-### 🚀 **Advanced Features**
-- 🌙 **Dark Mode Toggle** - Switch between light and dark themes with persistence
-- 🔍 **Smart Search** - Real-time text search with highlighting
-- 🎯 **Task Priorities** - High, Medium, Low priority levels with color coding
-- 📊 **Live Statistics** - Total, Active, Completed task counters
-- 📈 **Progress Tracking** - Animated progress bar showing completion percentage
-- 💾 **Theme Persistence** - Your theme choice is saved automatically
+- **Add and edit.** One big input, Enter to add, double-click a task (or the pencil) to edit it in place.
+- **Priorities.** High, medium and low, shown as a dot on each task.
+- **Filters with counts.** All, active, completed and high priority, each with a live number.
+- **Search.** Type in the list header and matches are highlighted; Escape clears.
+- **Progress.** Total, active and completed as bars, plus the completion figure set large.
+- **Focus timer.** 25-minute focus sessions with 5-minute breaks and a 15-minute break every fourth session. Use the target on a task to link it; finished sessions are counted on that task, a chime plays, and the tab title shows the countdown.
+- **Two themes.** Dark by default, light with one dark panel. The choice is remembered.
+- **Keyboard.** Enter adds a task, Escape clears the search, Space starts or pauses the timer.
 
-### 🎨 **Modern UI/UX**
-- 🎨 Beautiful gradient backgrounds
-- ✨ Smooth animations and transitions
-- 📱 Fully responsive design for all devices
-- 🏷️ Color-coded priority badges
-- 🔔 Toast notifications for user feedback
-- 🎭 Professional TaskMaster Pro branding
+## Light mode
 
-### ⚡ **Enhanced Experience**
-- 🎪 Interactive hover effects
-- ⌨️ Keyboard shortcuts (Enter to add tasks)
-- 🎯 Auto-focus on input fields
-- 📊 Dynamic empty states with contextual messages
-- 🔧 Advanced filtering system
+![TaskMaster Pro, light mode](screenshots/light.png)
 
-## 🖼️ Screenshots
+## On a phone
 
-### Light Mode
-<img width="1252" height="906" alt="Screenshot 2025-08-12 at 7 38 20 PM" src="https://github.com/user-attachments/assets/4da591f9-54a8-4302-8b61-93f945a41f72" />
+<img src="screenshots/mobile.png" width="360" alt="TaskMaster Pro on a phone" />
 
+## Stack
 
-### Dark Mode
-<img width="1252" height="906" alt="Screenshot 2025-08-12 at 7 37 22 PM" src="https://github.com/user-attachments/assets/a9b452db-5145-48a8-95f0-65ec965d8504" />
+Plain HTML, CSS and jQuery 3.5. No build step. Space Grotesk for text and [Geist Pixel](https://vercel.com/font) (Square) for the numerals, self-hosted. Tasks live in `localStorage` under `taskmaster.tasks`, the timer under `taskmaster.pomodoro`.
 
+## Run it locally
 
-### Search & Filtering
-<img width="1252" height="906" alt="Screenshot 2025-08-12 at 7 38 55 PM" src="https://github.com/user-attachments/assets/4cc3be97-86c5-4c99-9772-ea8dc3bd5506" />
+Clone the repository and open `index.html`, or serve the folder:
 
+```bash
+python3 -m http.server 4000
+# http://localhost:4000
+```
 
+## License
 
-## 🛠️ Technology Stack
+MIT. Geist Pixel is licensed under the SIL Open Font License, see `assets/fonts/GEIST-LICENSE.txt`.
 
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Library**: jQuery 3.5.1
-- **Styling**: Modern CSS with CSS Variables
-- **Icons**: Custom SVG icons
-- **Fonts**: Inter font family
-- **Storage**: localStorage for theme persistence
-
-## 🌟 Key improvements from the earlier minimalist version
-
-| Feature | Before | After |
-|---------|--------|-------|
-| Design | Basic styling | Modern UI with gradients & animations |
-| Functionality | Basic CRUD | Advanced filtering, search, priorities |
-| Theme | Light only | Light/Dark mode toggle |
-| Statistics | None | Real-time progress tracking |
-| Mobile | Limited | Fully responsive design |
-| UX | Basic | Toast notifications, smooth animations |
-
-## 🎯 Perfect For
-
-- Personal task management
-- Project planning
-- Daily productivity tracking
-- Learning modern web development
-- Showcasing advanced JavaScript features
-
-## 📈 Performance
-
-- ⚡ Fast and lightweight
-- 🔧 Optimized DOM manipulation
-- 💾 Efficient state management
-- 📱 Mobile-first responsive design
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest new features
-- Submit pull requests
-- Improve documentation
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-**Built with ❤️ by [Abhinandan Sharma](https://github.com/abhinandansharma)**
-
-*Transform your productivity with TaskMaster Pro! 🚀*
+Built by [Abhinandan Sharma](https://abhinandansharma.github.io/portfolio/).
