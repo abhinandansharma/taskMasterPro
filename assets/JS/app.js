@@ -30,6 +30,7 @@ $(document).ready(function () {
 
     function init() {
         loadTheme();
+        $('#today-label').text(new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }));
         const saved = loadSavedTasks();
         if (saved) {
             tasks = saved;
@@ -64,6 +65,7 @@ $(document).ready(function () {
     function loadTheme() {
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
+        $('#theme-toggle .theme-label').text(savedTheme === 'dark' ? 'Dark' : 'Light');
     }
 
     function toggleTheme() {
@@ -72,36 +74,24 @@ $(document).ready(function () {
 
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
-
-        showNotification(`Switched to ${newTheme} mode`, 'info');
+        $('#theme-toggle .theme-label').text(newTheme === 'dark' ? 'Dark' : 'Light');
 
     }
 
     function loadSampleTasks() {
-        // Convert existing sample tasks to task objects and add proper data attributes
-        $('.task-item').each(function (index) {
-            const $item = $(this);
-            const taskText = $item.find('.task-text').text();
-            const priorityClass = $item.find('.priority-badge').attr('class');
-            let priority = 'medium';
-
-            if (priorityClass && priorityClass.includes('priority-high')) priority = 'high';
-            else if (priorityClass && priorityClass.includes('priority-low')) priority = 'low';
-
-
-            const taskId = Date.now() + index;
-            const task = {
-                id: taskId,
-                text: taskText,
-                priority: priority,
-                completed: false,
-                timestamp: Date.now(),
-                dueDate: null
-            };
-
-            tasks.push(task);
-            $item.attr('data-task-id', taskId);
-        });
+        const samples = [
+            ['Write the release notes', 'high'],
+            ['Review the open pull requests', 'medium'],
+            ['Book the dentist', 'low'],
+        ];
+        tasks = samples.map(([text, priority], index) => ({
+            id: Date.now() + index,
+            text,
+            priority,
+            completed: false,
+            timestamp: Date.now(),
+            dueDate: null,
+        }));
     }
 
     function bindEvents() {
@@ -445,6 +435,17 @@ $(document).ready(function () {
         $completedTasks.text(completed);
         $progressFill.css('width', `${progress}%`);
         $progressText.text(`${progress}% Complete`);
+        $('#big-percent').html(`${progress}<small>%</small>`);
+        const pct = (n) => (total > 0 ? Math.round((n / total) * 100) : 0) + '%';
+        $('#bar-total').css('width', total > 0 ? '100%' : '0%');
+        $('#bar-active').css('width', pct(active));
+        $('#bar-completed').css('width', pct(completed));
+        const high = tasks.filter(t => t.priority === 'high').length;
+        $('[data-count="all"]').text(total);
+        $('[data-count="active"]').text(active);
+        $('[data-count="completed"]').text(completed);
+        $('[data-count="high"]').text(high);
+        $('#list-count').text(total === 1 ? '1 task' : `${total} tasks`);
 
         // Update clear completed button state
         $clearCompletedBtn.prop('disabled', completed === 0);
@@ -552,17 +553,18 @@ $(document).ready(function () {
                 transform: translateX(0);
             }
             
-            .notification { background: var(--ink); color: var(--card); border-radius: 10px; font-size: 13px; }
-            .notification-success { background: var(--success); color: #fff; }
-            .notification-warning { background: var(--medium); color: #fff; }
-            .notification-error { background: var(--danger); color: #fff; }
+            .notification { background: var(--paper); color: var(--ink); border-radius: 999px; font-size: 13px; padding: 10px 16px; }
+            [data-theme="dark"] .notification { background: var(--ink); color: var(--paper); }
+            .notification-success { background: var(--sage); color: var(--ink); }
+            .notification-error { background: var(--orange); color: var(--ink); }
             
             @media (max-width: 640px) {
                 .notification {
                     top: 10px;
+                    bottom: auto;
                     right: 10px;
-                    left: 10px;
-                    transform: translateY(-100%);
+                    left: auto;
+                    transform: translateY(-120%);
                 }
                 
                 .notification.show {
