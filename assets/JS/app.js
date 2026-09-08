@@ -27,6 +27,7 @@ $(document).ready(function () {
 
     // Initialize app
     init();
+    const pomodoro = initPomodoro();
 
     function init() {
         loadTheme();
@@ -152,6 +153,11 @@ $(document).ready(function () {
         $taskList.on('dblclick', '.task-text', function () {
             startEdit($(this).closest('.task-item'));
         });
+        $taskList.on('click', '.focus-btn', function (e) {
+            e.stopPropagation();
+            pomodoro.focusTask($(this).closest('.task-item').data('task-id'));
+        });
+
         $taskList.on('click', '.edit-btn', function (e) {
             e.stopPropagation();
             startEdit($(this).closest('.task-item'));
@@ -226,10 +232,14 @@ $(document).ready(function () {
                     <div class="task-details">
                         <span class="task-text">${escapeHtml(task.text)}</span>
                         <div class="task-meta">
+                            ${task.pomodoros ? `<span class="pomo-badge" title="Focus sessions on this task"><b>${task.pomodoros}</b> focus</span>` : ''}
                             <span class="priority-badge priority-${task.priority}">${priorityLabels[task.priority]}</span>
                         </div>
                     </div>
                 </div>
+                <button class="focus-btn" aria-label="Focus on this task">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>
+                </button>
                 <button class="edit-btn" aria-label="Edit task">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
                 </button>
@@ -300,6 +310,7 @@ $(document).ready(function () {
     }
 
     function deleteTask(taskId, $taskElement) {
+        try { const k = 'taskmaster.pomodoro'; const st = JSON.parse(localStorage.getItem(k) || 'null'); if (st && st.taskId == taskId) { st.taskId = null; localStorage.setItem(k, JSON.stringify(st)); if (typeof pomodoro !== 'undefined') pomodoro.refresh(); } } catch (_) { /* ignore */ }
         // Add removing animation
         $taskElement.addClass('removing');
 
@@ -531,6 +542,132 @@ $(document).ready(function () {
         return div.innerHTML;
     }
 
+    /* ---------- Focus timer (Pomodoro) ---------- */
+    function initPomodoro() {
+        const KEY = 'taskmaster.pomodoro';
+        const DURATION = { focus: 25 * 60, short: 5 * 60, long: 15 * 60 };
+        const LABEL = { focus: 'Focus', short: 'Short break', long: 'Long break' };
+        const today = () => new Date().toISOString().slice(0, 10);
+        const $root = $('#pomodoro');
+        const $time = $('#pomo-time');
+        const $start = $('#pomo-start');
+        const $task = $('#pomo-task');
+        const $today = $('#pomo-today');
+        const $dots = $('#pomo-dots i');
+        const baseTitle = document.title;
+        let timer = null;
+
+        let state = {
+            mode: 'focus', remaining: DURATION.focus, running: false, endAt: null,
+            cycle: 0, sessions: 0, day: today(), taskId: null
+        };
+        try {
+            const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+            if (saved && typeof saved === 'object') state = Object.assign(state, saved);
+        } catch (_) { /* ignore */ }
+        if (state.day !== today()) { state.day = today(); state.sessions = 0; state.cycle = 0; }
+        if (state.running && state.endAt) {
+            state.remaining = Math.max(0, Math.round((state.endAt - Date.now()) / 1000));
+            if (state.remaining === 0) { state.running = false; state.endAt = null; complete(true); }
+        }
+
+        function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) { /* ignore */ } }
+        function fmt(sec) { const m = Math.floor(sec / 60), s = sec % 60; return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; }
+        function linkedTask() { return state.taskId ? tasks.find(t => t.id == state.taskId) : null; }
+
+        function render() {
+            $time.text(fmt(state.remaining));
+            $root.toggleClass('running', state.running).toggleClass('break', state.mode !== 'focus');
+            $('.pomo-mode').removeClass('active').filter(`[data-mode="${state.mode}"]`).addClass('active');
+            $start.text(state.running ? 'Pause' : (state.remaining === DURATION[state.mode] ? 'Start' : 'Resume'));
+            $dots.each(function (i) { $(this).toggleClass('done', i < state.cycle); });
+            $today.html(state.sessions ? `<b>${state.sessions}</b> ${state.sessions === 1 ? 'session' : 'sessions'} today` : '');
+            const t = linkedTask();
+            if (t) $task.html(`${state.mode === 'focus' ? 'Focusing on' : 'Next up'} <b>${escapeHtml(t.text)}</b>`);
+            else $task.text(state.mode === 'focus' ? 'No task linked. Use the target on a task to focus on it.' : 'Step away from the screen for a bit.');
+            $('.task-item').removeClass('focused');
+            if (t) $(`.task-item[data-task-id="${t.id}"]`).addClass('focused');
+            document.title = state.running ? `${fmt(state.remaining)} · ${LABEL[state.mode]} — ${baseTitle}` : baseTitle;
+        }
+
+        function tick() {
+            state.remaining = Math.max(0, Math.round((state.endAt - Date.now()) / 1000));
+            if (state.remaining === 0) { stopTimer(); complete(false); return; }
+            render();
+        }
+        function startTimer() {
+            state.running = true;
+            state.endAt = Date.now() + state.remaining * 1000;
+            clearInterval(timer); timer = setInterval(tick, 250);
+            save(); render();
+        }
+        function stopTimer() { state.running = false; state.endAt = null; clearInterval(timer); timer = null; save(); render(); }
+        function setMode(mode, keepTask = true) {
+            clearInterval(timer); timer = null;
+            state.mode = mode; state.remaining = DURATION[mode]; state.running = false; state.endAt = null;
+            if (!keepTask) state.taskId = null;
+            save(); render();
+        }
+        function complete(silent) {
+            if (state.mode === 'focus') {
+                state.sessions += 1;
+                state.cycle = (state.cycle + 1) % 4;
+                const t = linkedTask();
+                if (t) {
+                    t.pomodoros = (t.pomodoros || 0) + 1;
+                    saveTasks();
+                    $(`.task-item[data-task-id="${t.id}"]`).replaceWith(createTaskElement(t));
+                    applyFilters();
+                }
+                const next = state.cycle === 0 ? 'long' : 'short';
+                if (!silent) { chime(); showNotification(`Focus session done. Time for a ${LABEL[next].toLowerCase()}.`, 'success'); }
+                setMode(next);
+            } else {
+                if (!silent) { chime(); showNotification('Break over. Ready to focus?', 'info'); }
+                setMode('focus');
+            }
+        }
+        function chime() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                [0, 0.18].forEach((delay, i) => {
+                    const o = ctx.createOscillator(), g = ctx.createGain();
+                    o.type = 'sine'; o.frequency.value = i ? 880 : 660;
+                    g.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+                    g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + delay + 0.02);
+                    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.5);
+                    o.connect(g).connect(ctx.destination);
+                    o.start(ctx.currentTime + delay); o.stop(ctx.currentTime + delay + 0.55);
+                });
+                setTimeout(() => ctx.close(), 1200);
+            } catch (_) { /* no audio */ }
+        }
+
+        $start.on('click', () => (state.running ? stopTimer() : startTimer()));
+        $('#pomo-reset').on('click', () => setMode(state.mode));
+        $('.pomo-mode').on('click', function () { setMode($(this).data('mode')); });
+        $(document).on('keydown', (e) => {
+            if (e.key === ' ' && !$(e.target).is('input, select, textarea, button') && !$root.is(':hidden')) { e.preventDefault(); $start.trigger('click'); }
+        });
+        document.addEventListener('visibilitychange', () => { if (!document.hidden && state.running) tick(); });
+
+        if (state.running) { timer = setInterval(tick, 250); }
+        render();
+
+        return {
+            focusTask(taskId) {
+                const t = tasks.find(x => x.id == taskId);
+                if (!t) return;
+                if (state.taskId == taskId && state.mode === 'focus') { state.taskId = null; save(); render(); return; }
+                state.taskId = t.id;
+                if (state.mode !== 'focus') setMode('focus');
+                if (!state.running) startTimer(); else { save(); render(); }
+                showNotification(`Focusing on “${t.text.length > 40 ? t.text.slice(0, 40) + '…' : t.text}”`, 'info');
+            },
+            refresh: render,
+        };
+    }
+
     // Add notification styles dynamically
     const notificationCSS = `
         <style>
@@ -555,8 +692,8 @@ $(document).ready(function () {
             
             .notification { background: var(--paper); color: var(--ink); border-radius: 999px; font-size: 13px; padding: 10px 16px; }
             [data-theme="dark"] .notification { background: var(--ink); color: var(--paper); }
-            .notification-success { background: var(--sage); color: var(--ink); }
-            .notification-error { background: var(--orange); color: var(--ink); }
+            .notification-success { background: var(--lime); color: var(--ink); }
+            .notification-error { background: var(--sand); color: var(--ink); }
             
             @media (max-width: 640px) {
                 .notification {
