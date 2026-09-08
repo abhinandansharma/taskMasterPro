@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/CSS/main.css?v=4">
+    <link rel="stylesheet" href="assets/CSS/main.css?v=5">
 </head>
 
 <body>
@@ -40,87 +40,84 @@
             </header>
 
             <section class="bento">
-                <!-- Summary -->
-                <article class="block block-sage span-7">
+                <!-- Add: the one big input -->
+                <article class="block block-mustard span-7">
                     <div class="block-head">
-                        <span class="pill pill-static">Your progress</span>
-                        <span class="progress-text" id="progress-text">0% Complete</span>
-                    </div>
-                    <div class="summary">
-                        <div class="lines">
-                            <div class="line"><span class="line-label">Total</span><div class="line-bar"><i id="bar-total"></i></div><b class="line-num" id="total-tasks">0</b></div>
-                            <div class="line"><span class="line-label">Active</span><div class="line-bar"><i id="bar-active"></i></div><b class="line-num" id="active-tasks">0</b></div>
-                            <div class="line"><span class="line-label">Completed</span><div class="line-bar"><i id="bar-completed"></i></div><b class="line-num" id="completed-tasks">0</b></div>
-                        </div>
-                        <div class="big-number" id="big-percent">0<small>%</small></div>
-                    </div>
-                    <div class="progress-bar" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
-                </article>
-
-                <!-- Add -->
-                <article class="block block-mustard span-5">
-                    <div class="block-head">
-                        <span class="pill pill-static">New task</span>
-                        <span class="hint-key">Enter to add</span>
+                        <span class="pill pill-static">Add a task</span>
+                        <span class="hint-key">Press Enter to add</span>
                     </div>
                     <div class="input-container">
                         <input type="text" id="new-task-input" placeholder="What needs to be done?" aria-label="Add new task" autocomplete="off">
                         <div class="input-row">
                             <label class="select-wrap">
+                                <span class="select-label">Priority</span>
                                 <select id="priority-select" class="priority-select" aria-label="Task priority">
-                                    <option value="low">Low priority</option>
-                                    <option value="medium" selected>Medium priority</option>
-                                    <option value="high">High priority</option>
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
                                 </select>
                             </label>
-                            <button id="add-task-btn" class="pill pill-solid" aria-label="Add task">Add task</button>
+                            <button id="add-task-btn" class="pill pill-solid pill-lg" aria-label="Add task">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                                Add task
+                            </button>
                         </div>
                     </div>
                 </article>
 
-                <!-- Filters -->
-                <article class="block block-lilac span-4">
+                <!-- Summary -->
+                <article class="block block-sage span-5">
                     <div class="block-head">
-                        <span class="pill pill-static">View</span>
+                        <span class="pill pill-static">Progress</span>
+                        <span class="progress-text" id="progress-text">0% Complete</span>
+                    </div>
+                    <div class="big-number" id="big-percent">0<small>%</small></div>
+                    <div class="lines">
+                        <div class="line"><span class="line-label">Total</span><div class="line-bar"><i id="bar-total"></i></div><b class="line-num" id="total-tasks">0</b></div>
+                        <div class="line"><span class="line-label">Active</span><div class="line-bar"><i id="bar-active"></i></div><b class="line-num" id="active-tasks">0</b></div>
+                        <div class="line"><span class="line-label">Completed</span><div class="line-bar"><i id="bar-completed"></i></div><b class="line-num" id="completed-tasks">0</b></div>
+                    </div>
+                    <div class="progress-bar" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+                </article>
+
+                <!-- Filters -->
+                <aside class="block block-lilac span-4">
+                    <div class="block-head">
+                        <span class="pill pill-static">Show</span>
                     </div>
                     <div class="filter-tabs" role="tablist">
-                        <button class="filter-btn active" data-filter="all" role="tab"><span>All</span><b class="count" data-count="all">0</b></button>
+                        <button class="filter-btn active" data-filter="all" role="tab"><span>All tasks</span><b class="count" data-count="all">0</b></button>
                         <button class="filter-btn" data-filter="active" role="tab"><span>Active</span><b class="count" data-count="active">0</b></button>
                         <button class="filter-btn" data-filter="completed" role="tab"><span>Completed</span><b class="count" data-count="completed">0</b></button>
                         <button class="filter-btn" data-filter="high" role="tab"><span>High priority</span><b class="count" data-count="high">0</b></button>
                     </div>
-                </article>
+                    <button id="clear-completed" class="pill clear-btn" disabled>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+                        Clear completed
+                    </button>
+                    <p class="block-note">Double-click a task to edit it.</p>
+                </aside>
 
-                <!-- Search + actions -->
-                <article class="block block-orange span-8">
-                    <div class="block-head">
-                        <span class="pill pill-static">Find</span>
-                        <button id="clear-completed" class="pill" disabled>Clear completed</button>
-                    </div>
-                    <div class="search-container">
-                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                        <input type="text" id="search-input" placeholder="Search tasks" aria-label="Search tasks" autocomplete="off">
-                        <button id="clear-search" class="clear-search" style="display: none;" aria-label="Clear search">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                        </button>
-                    </div>
-                    <p class="block-note">Double-click a task to edit it. Escape clears the search.</p>
-                </article>
-
-                <!-- List -->
-                <main class="block block-list span-12 tasks-section">
-                    <div class="block-head">
-                        <span class="pill pill-static">Tasks</span>
+                <!-- List with search in its header -->
+                <main class="block block-list span-8 tasks-section">
+                    <div class="block-head list-head">
                         <span class="list-count" id="list-count"></span>
+                        <div class="search-container">
+                            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                            <input type="text" id="search-input" placeholder="Search" aria-label="Search tasks" autocomplete="off">
+                            <button id="clear-search" class="clear-search" style="display: none;" aria-label="Clear search">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
                     </div>
                     <ul id="task-list" class="task-list" role="list"></ul>
                     <div class="empty-state" id="empty-state" style="display: none;">
-                        <h3>All caught up!</h3>
-                        <p>You have no tasks remaining. Great job!</p>
+                        <h3>Nothing here yet</h3>
+                        <p>Add a task above to get started.</p>
                     </div>
                     <div class="no-search-results" id="no-search-results" style="display: none;">
-                        <h3>No tasks found</h3>
-                        <p>Try adjusting your search terms</p>
+                        <h3>No matching tasks</h3>
+                        <p>Try a different word, or clear the search.</p>
                     </div>
                 </main>
             </section>
@@ -132,6 +129,6 @@
         </div>
     </div>
 
-    <script src="assets/JS/app.js?v=4"></script>
+    <script src="assets/JS/app.js?v=5"></script>
 </body>
 </html>
