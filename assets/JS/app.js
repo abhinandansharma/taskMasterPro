@@ -552,21 +552,10 @@ $(document).ready(function () {
                 transform: translateX(0);
             }
             
-            .notification-success {
-                background: var(--success-color, #48bb78);
-            }
-            
-            .notification-info {
-                background: var(--primary-color, #667eea);
-            }
-            
-            .notification-warning {
-                background: var(--warning-color, #ed8936);
-            }
-            
-            .notification-error {
-                background: var(--danger-color, #f56565);
-            }
+            .notification { background: var(--ink); color: var(--card); border-radius: 10px; font-size: 13px; }
+            .notification-success { background: var(--success); color: #fff; }
+            .notification-warning { background: var(--medium); color: #fff; }
+            .notification-error { background: var(--danger); color: #fff; }
             
             @media (max-width: 640px) {
                 .notification {
