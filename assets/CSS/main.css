@@ -92,6 +92,26 @@
     --toast-bg: #4c4f69; --toast-fg: #eff1f5;
 }
 
+/* Gruvbox */
+[data-palette="gruvbox"] {
+    --canvas: #282828; --chrome: #ebdbb2;
+    --ink: #282828; --paper: #ebdbb2;
+    --lime: #fe8019; --accent-ink: #282828; --accent-paper: #ebdbb2;
+    --bone: #3c3836; --bone-ink: #ebdbb2; --bone-paper: #282828; --bone-bar: #fe8019; --bone-number: #fe8019;
+    --sand: #504945; --sand-ink: #ebdbb2; --sand-paper: #282828;
+    --charcoal: #1d2021; --charcoal-fg: #ebdbb2; --charcoal-ink: #282828; --charcoal-line: #3c3836; --charcoal-muted: #a89984;
+    --list-bg: #32302f; --list-fg: #ebdbb2; --list-muted: #a89984; --list-line: #3c3836;
+    --high: #fe8019; --medium: #d5c4a1; --low: #7c6f64;
+    --toast-bg: #ebdbb2; --toast-fg: #282828;
+}
+[data-palette="gruvbox"][data-theme="dark"] {
+    --canvas: #fbf1c7; --chrome: #282828;
+    --bone: #282828; --sand: #d5c4a1; --sand-ink: #282828; --sand-paper: #ebdbb2;
+    --list-bg: #ffffff; --list-fg: #282828; --list-muted: #7c6f64; --list-line: #ebe1c0;
+    --medium: #bdae93; --low: #a89984;
+    --toast-bg: #282828; --toast-fg: #ebdbb2;
+}
+
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
