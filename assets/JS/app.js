@@ -6,6 +6,7 @@ $(document).ready(function () {
     let currentFilter = 'all';
     let searchQuery = '';
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const PALETTES = { lime: 'Lime', dracula: 'Dracula', nord: 'Nord', catppuccin: 'Catppuccin' };
     const REPEAT_LABEL = { daily: 'Daily', weekdays: 'Weekdays', weekly: 'Weekly', monthly: 'Monthly' };
     const WEEKDAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const WEEKDAY_SHORT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -43,6 +44,7 @@ $(document).ready(function () {
     initShortcuts();
     initDrag();
     initShare();
+    initPalette();
     updateHint();
     registerServiceWorker();
 
@@ -998,6 +1000,25 @@ $(document).ready(function () {
         $select.on('change', function () { sound.select($(this).val()); });
         $volume.on('input', function () { sound.setVolume($(this).val()); persist(); });
         window.addEventListener('pagehide', () => sound.stop());
+    }
+
+    /* ---------- palettes: Lime, Dracula, Nord, Catppuccin, each with a light mode ---------- */
+    function applyPalette(id) {
+        const key = PALETTES[id] ? id : 'lime';
+        if (key === 'lime') document.documentElement.removeAttribute('data-palette');
+        else document.documentElement.setAttribute('data-palette', key);
+        $('#palette-name').text(PALETTES[key]);
+        $('#palette-select').val(key);
+        const canvas = getComputedStyle(document.documentElement).getPropertyValue('--canvas').trim();
+        if (canvas) $('meta[name="theme-color"]').attr('content', canvas);
+        try { localStorage.setItem('taskmaster.palette', key); } catch (_) { /* ignore */ }
+    }
+    function initPalette() {
+        let saved = 'lime';
+        try { saved = localStorage.getItem('taskmaster.palette') || 'lime'; } catch (_) { /* ignore */ }
+        applyPalette(saved);
+        $('#palette-select').on('change', function () { applyPalette($(this).val()); announce(`${PALETTES[$(this).val()] || 'Lime'} palette`); });
+        $themeToggle.on('click', () => applyPalette($('#palette-select').val()));
     }
 
     function registerServiceWorker() {
