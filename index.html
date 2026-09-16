@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskMaster Pro</title>
-    <meta name="description" content="A jQuery task manager with a Pomodoro focus timer, priorities, live search, progress stats, inline editing and a dark mode. Remembers your tasks.">
+    <meta name="description" content="Tasks with priorities and due dates, a Pomodoro focus timer with focus sounds, undo, backup, and a dark mode. Installs as an app and works offline.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://abhinandansharma.github.io/taskMasterPro/">
     <meta property="og:title" content="TaskMaster Pro">
-    <meta property="og:description" content="A jQuery task manager with a Pomodoro focus timer, priorities, live search, progress stats, inline editing and a dark mode. Remembers your tasks.">
+    <meta property="og:description" content="Tasks with priorities and due dates, a Pomodoro focus timer with focus sounds, undo, backup, and a dark mode. Installs as an app and works offline.">
     <meta property="og:image" content="https://abhinandansharma.github.io/taskMasterPro/og.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:creator" content="@notjustadev">
     <meta name="theme-color" content="#0c0c0c">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="TaskMaster">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b0b'/%3E%3Cpath d='M18 33l10 10 18-20' fill='none' stroke='%23cbe346' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <script defer src="assets/JS/lib/jquery-3.5.1.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,7 +27,7 @@
     <link rel="preload" href="assets/fonts/GeistPixel-Square.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"></noscript>
-    <link rel="stylesheet" href="assets/CSS/main.css?v=13">
+    <link rel="stylesheet" href="assets/CSS/main.css?v=15">
 </head>
 
 <body>
@@ -59,6 +64,10 @@
                                     <option value="high">High</option>
                                 </select>
                             </label>
+                            <label class="select-wrap">
+                                <span class="select-label">Due</span>
+                                <input type="date" id="due-input" class="date-input" aria-label="Due date">
+                            </label>
                             <button id="add-task-btn" class="pill pill-solid pill-lg" aria-label="Add task">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
                                 Add task
@@ -94,6 +103,7 @@
                             <button class="filter-btn" data-filter="active" role="tab"><span>Active</span><b class="count" data-count="active">0</b></button>
                             <button class="filter-btn" data-filter="completed" role="tab"><span>Completed</span><b class="count" data-count="completed">0</b></button>
                             <button class="filter-btn" data-filter="high" role="tab"><span>High priority</span><b class="count" data-count="high">0</b></button>
+                            <button class="filter-btn" data-filter="due" role="tab"><span>Due today</span><b class="count" data-count="due">0</b></button>
                         </div>
                     </aside>
 
@@ -109,6 +119,24 @@
                         </div>
                         <div class="pomo-time" id="pomo-time" aria-live="off">25:00</div>
                         <p class="pomo-task" id="pomo-task">No task linked. Use the target on a task to focus on it.</p>
+                        <div class="pomo-sound">
+                            <label class="select-wrap">
+                                <span class="select-label">Sound</span>
+                                <select id="sound-select" class="priority-select sound-select" aria-label="Focus sound, plays while a focus session runs">
+                                    <option value="off">Off</option>
+                                    <option value="rain">Rain</option>
+                                    <option value="fire">Fireplace</option>
+                                    <option value="ocean">Ocean</option>
+                                    <option value="wind">Wind</option>
+                                    <option value="night">Night</option>
+                                    <option value="brown">Brown noise</option>
+                                    <option value="lofi">Lo-fi beat</option>
+                                    <option value="rainlofi">Lo-fi and rain</option>
+                                    <option value="pad">Soft pad</option>
+                                </select>
+                            </label>
+                            <input type="range" id="sound-volume" class="sound-volume" min="0" max="1" step="0.05" value="0.6" aria-label="Sound volume">
+                        </div>
                         <div class="pomo-actions">
                             <button id="pomo-start" class="pill pill-lime">Start</button>
                             <button id="pomo-reset" class="pill pill-ghost">Reset</button>
@@ -142,13 +170,14 @@
             </section>
 
             <footer class="app-footer">
-                <span class="footer-left"><span>Stored in this browser only.</span></span>
+                <span class="footer-left"><span>Stored in this browser only.</span><button type="button" class="link-btn" id="export-btn">Export</button><button type="button" class="link-btn" id="import-btn">Import</button><input type="file" id="import-file" accept="application/json,.json" hidden></span>
                 <a href="https://github.com/abhinandansharma/taskMasterPro" target="_blank" rel="noreferrer">Source</a>
             </footer>
         </div>
     </div>
 
     <a class="made-by" href="https://abhinandansharma.github.io/portfolio/" target="_blank" rel="noreferrer" aria-label="Made by Abhinandan Sharma. Opens the portfolio."><svg class="made-by-mark" viewBox="0 0 512 512" width="20" height="20" aria-hidden="true"><defs><clipPath id="mb-clip"><rect width="512" height="512" rx="112"/></clipPath></defs><rect width="512" height="512" rx="112" fill="#e0202a"/><g clip-path="url(#mb-clip)"><path d="M256 78 C156 78 100 154 100 254 L100 540 L412 540 L412 254 C412 154 356 78 256 78 Z" fill="#0b0b0b"/><path d="M404 206 Q470 178 518 132 Q492 224 410 252 Z" fill="#0b0b0b"/><path d="M406 232 Q468 240 512 292 Q462 262 408 250 Z" fill="#0b0b0b"/><path d="M118 232 Q256 196 394 232 L394 262 Q256 304 118 262 Z" fill="#f1ede4"/><path d="M152 248 L238 234 L242 270 L166 280 Z" fill="#0b0b0b"/><path d="M360 248 L274 234 L270 270 L346 280 Z" fill="#0b0b0b"/></g></svg><span>Made by <b>Abhinandan</b></span></a>
-    <script defer src="assets/JS/app.js?v=9"></script>
+    <script type="module" src="assets/JS/sound.js?v=1"></script>
+    <script defer src="assets/JS/app.js?v=10"></script>
 </body>
 </html>
