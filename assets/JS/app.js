@@ -6,6 +6,13 @@ $(document).ready(function () {
     let currentFilter = 'all';
     let searchQuery = '';
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const REPEAT_LABEL = { daily: 'Daily', weekdays: 'Weekdays', weekly: 'Weekly', monthly: 'Monthly' };
+    const WEEKDAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const WEEKDAY_SHORT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const HINT_DEFAULT = 'Press Enter to add';
+    const HINT_TRY = 'Try “Call the bank tomorrow !high every week”';
+    let toastTimer = null;
+    let pendingUndo = null;
 
     // Cache DOM elements
     const $taskList = $('#task-list');
@@ -26,7 +33,6 @@ $(document).ready(function () {
     const $activeTasks = $('#active-tasks');
     const $completedTasks = $('#completed-tasks');
     const $progressFill = $('#progress-fill');
-    const $progressText = $('#progress-text');
 
     // Initialize app
     let pomodoro = null;
@@ -35,6 +41,9 @@ $(document).ready(function () {
     initSound();
     initBackup();
     initShortcuts();
+    initDrag();
+    initShare();
+    updateHint();
     registerServiceWorker();
 
     function init() {
@@ -135,6 +144,73 @@ $(document).ready(function () {
         const days = daysUntil(task.dueDate);
         return !task.completed && days !== null && days <= 0;
     }
+    function addDays(iso, n) { const d = parseIso(iso) || new Date(); d.setDate(d.getDate() + n); return isoOf(d); }
+    function nextWeekday(dayIndex, allowToday) {
+        const d = new Date(); d.setHours(0, 0, 0, 0);
+        let diff = (dayIndex - d.getDay() + 7) % 7;
+        if (diff === 0 && !allowToday) diff = 7;
+        d.setDate(d.getDate() + diff);
+        return isoOf(d);
+    }
+
+    /* ---------- recurrence ---------- */
+    /** The next due date after finishing a repeating task. Overdue ones catch up to the present. */
+    function nextOccurrence(iso, repeat) {
+        const today = isoToday();
+        let base = iso && iso > today ? iso : today;
+        if (repeat === 'daily') return addDays(base, 1);
+        if (repeat === 'weekdays') { let n = addDays(base, 1); while ([0, 6].includes(parseIso(n).getDay())) n = addDays(n, 1); return n; }
+        if (repeat === 'weekly') { let n = addDays(iso || today, 7); while (n <= today) n = addDays(n, 7); return n; }
+        if (repeat === 'monthly') {
+            const src = parseIso(iso) || new Date();
+            let n = new Date(src.getFullYear(), src.getMonth() + 1, Math.min(src.getDate(), 28));
+            while (isoOf(n) <= today) n = new Date(n.getFullYear(), n.getMonth() + 1, Math.min(src.getDate(), 28));
+            return isoOf(n);
+        }
+        return null;
+    }
+
+    /* ---------- quick-add syntax: "Pay rent tomorrow !high every month" ---------- */
+    function weekdayIndex(word) {
+        const w = word.toLowerCase();
+        let i = WEEKDAY_NAMES.indexOf(w);
+        if (i < 0) i = WEEKDAY_SHORT.findIndex(x => w.startsWith(x));
+        return i;
+    }
+    function parseQuickAdd(raw) {
+        let text = ` ${raw} `;
+        const out = { priority: null, dueDate: null, repeat: null };
+        const take = (re, fn) => { const m = re.exec(text); if (m) { fn(m); text = text.slice(0, m.index) + ' ' + text.slice(m.index + m[0].length); } };
+        take(/\s!(high|hi|h|urgent)(?=\s)/i, () => { out.priority = 'high'; });
+        take(/\s!(medium|med|m)(?=\s)/i, () => { out.priority = 'medium'; });
+        take(/\s!(low|lo|l)(?=\s)/i, () => { out.priority = 'low'; });
+        take(/\severy (sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|tues|wed|thu|thurs|fri|sat)(?=\s)/i, (m) => { out.repeat = 'weekly'; out.dueDate = nextWeekday(weekdayIndex(m[1]), true); });
+        take(/\s(every day|daily)(?=\s)/i, () => { out.repeat = 'daily'; });
+        take(/\s(every weekday|weekdays)(?=\s)/i, () => { out.repeat = 'weekdays'; });
+        take(/\s(every week|weekly)(?=\s)/i, () => { out.repeat = 'weekly'; });
+        take(/\s(every month|monthly)(?=\s)/i, () => { out.repeat = 'monthly'; });
+        take(/\s(today|tod)(?=\s)/i, () => { out.dueDate = isoToday(); });
+        take(/\s(tomorrow|tmrw|tmr|tom)(?=\s)/i, () => { out.dueDate = isoDaysFromNow(1); });
+        take(/\snext week(?=\s)/i, () => { out.dueDate = isoDaysFromNow(7); });
+        take(/\sin (\d{1,3}) days?(?=\s)/i, (m) => { out.dueDate = isoDaysFromNow(Number(m[1])); });
+        take(/\s(\d{4}-\d{2}-\d{2})(?=\s)/, (m) => { if (parseIso(m[1])) out.dueDate = m[1]; });
+        take(/\s(?:on |next )?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)(?=\s)/i, (m) => { out.dueDate = nextWeekday(weekdayIndex(m[1]), false); });
+        take(/\s(?:on|next) (sun|mon|tue|tues|wed|thu|thurs|fri|sat)(?=\s)/i, (m) => { out.dueDate = nextWeekday(weekdayIndex(m[1]), false); });
+        if (out.repeat === 'weekdays' && !out.dueDate) out.dueDate = [0, 6].includes(new Date().getDay()) ? nextOccurrence(null, 'weekdays') : isoToday();
+        if (out.repeat && !out.dueDate) out.dueDate = isoToday();
+        out.text = text.replace(/\s{2,}/g, ' ').trim();
+        return out;
+    }
+    function describeParse(parsed) {
+        const bits = [];
+        if (parsed.priority) bits.push(`${parsed.priority[0].toUpperCase()}${parsed.priority.slice(1)} priority`);
+        if (parsed.dueDate) { const d = dueInfo({ dueDate: parsed.dueDate, completed: false }); bits.push(d ? d.label.replace('Overdue · ', '') : parsed.dueDate); }
+        if (parsed.repeat) bits.push(`Repeats ${REPEAT_LABEL[parsed.repeat].toLowerCase()}`);
+        return bits.join(' · ');
+    }
+
+    /* ---------- screen reader announcements ---------- */
+    function announce(text) { const el = document.getElementById('announce'); if (!el) return; el.textContent = ''; setTimeout(() => { el.textContent = text; }, 30); }
 
     function bindEvents() {
         // Theme toggle
@@ -152,6 +228,8 @@ $(document).ready(function () {
             submitNewTask();
             $newTaskInput.focus();
         });
+        $newTaskInput.on('input focus blur', updateHint);
+        $newTaskInput.on('keydown', function (e) { if (e.key === 'Escape') { $(this).val(''); updateHint(); } });
 
         // Search functionality
         $searchInput.on('input', function () {
@@ -219,21 +297,31 @@ $(document).ready(function () {
     }
 
     function submitNewTask() {
-        const text = $newTaskInput.val().trim();
-        if (text === '') return;
-        addTask(text, $prioritySelect.val(), $dueInput.val() || null);
+        const parsed = parseQuickAdd($newTaskInput.val());
+        if (parsed.text === '') return;
+        addTask(parsed.text, parsed.priority || $prioritySelect.val(), parsed.dueDate || $dueInput.val() || null, parsed.repeat);
         $newTaskInput.val('');
         $dueInput.val('');
+        updateHint();
     }
 
-    function addTask(text, priority = 'medium', dueDate = null) {
+    function updateHint() {
+        const $hint = $('#add-hint');
+        const raw = $newTaskInput.val();
+        if (!raw.trim()) { $hint.text($newTaskInput.is(':focus') ? HINT_TRY : HINT_DEFAULT).removeClass('parsed'); return; }
+        const desc = describeParse(parseQuickAdd(raw));
+        $hint.text(desc || HINT_DEFAULT).toggleClass('parsed', !!desc);
+    }
+
+    function addTask(text, priority = 'medium', dueDate = null, repeat = null) {
         const task = {
             id: Date.now(),
             text: text,
             priority: priority,
             completed: false,
             timestamp: Date.now(),
-            dueDate: parseIso(dueDate) ? dueDate : null
+            dueDate: parseIso(dueDate) ? dueDate : null,
+            repeat: REPEAT_LABEL[repeat] ? repeat : null,
         };
 
         tasks.unshift(task); // Add to beginning of array
@@ -309,6 +397,7 @@ $(document).ready(function () {
         return $(`
             <li class="task-item ${task.completed ? 'completed' : ''}" role="listitem" data-task-id="${task.id}">
                 <div class="task-content">
+                    ${task.completed ? '' : `<span class="drag-handle" aria-hidden="true" title="Drag to reorder"><svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor"><circle cx="2.5" cy="3" r="1.5"/><circle cx="7.5" cy="3" r="1.5"/><circle cx="2.5" cy="8" r="1.5"/><circle cx="7.5" cy="8" r="1.5"/><circle cx="2.5" cy="13" r="1.5"/><circle cx="7.5" cy="13" r="1.5"/></svg></span>`}
                     <button class="task-checkbox ${task.completed ? 'checked' : ''}" aria-label="${task.completed ? 'Mark as active' : 'Mark as complete'}" aria-pressed="${task.completed ? 'true' : 'false'}">
                         <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                             <polyline points="20,6 9,17 4,12"></polyline>
@@ -319,6 +408,7 @@ $(document).ready(function () {
                         <div class="task-meta">
                             ${task.pomodoros ? `<span class="pomo-badge" title="Focus sessions on this task"><b>${task.pomodoros}</b> focus</span>` : ''}
                             ${due ? `<span class="due-badge ${due.cls}">${escapeHtml(due.label)}</span>` : ''}
+                            ${task.repeat && REPEAT_LABEL[task.repeat] ? `<span class="repeat-badge" title="Repeats"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>${REPEAT_LABEL[task.repeat]}</span>` : ''}
                             <span class="priority-badge priority-${task.priority}">${priorityLabels[task.priority] || 'Medium Priority'}</span>
                         </div>
                     </div>
@@ -358,6 +448,10 @@ $(document).ready(function () {
                             <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
                         </select></label>
                     <label class="edit-field"><span>Due</span><input type="date" class="edit-due" aria-label="Due date"></label>
+                    <label class="edit-field"><span>Repeat</span>
+                        <select class="edit-repeat" aria-label="Repeat">
+                            <option value="">Never</option><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option>
+                        </select></label>
                     <button type="button" class="pill pill-sm edit-clear-due"${task.dueDate ? '' : ' hidden'}>No date</button>
                     <button type="button" class="pill pill-sm pill-solid-list edit-save">Save</button>
                     <span class="edit-hint">Enter saves, Esc cancels</span>
@@ -367,6 +461,7 @@ $(document).ready(function () {
         $form.find('.task-edit').val(task.text);
         $form.find('.edit-priority').val(task.priority);
         $form.find('.edit-due').val(task.dueDate || '');
+        $form.find('.edit-repeat').val(task.repeat || '');
         $item.addClass('editing');
         $details.hide().after($form);
         $form.find('.task-edit').focus().select();
@@ -377,11 +472,14 @@ $(document).ready(function () {
             done = true;
             const value = $form.find('.task-edit').val().trim();
             const priority = $form.find('.edit-priority').val();
-            const dueDate = $form.find('.edit-due').val() || null;
+            let dueDate = $form.find('.edit-due').val() || null;
+            const repeat = $form.find('.edit-repeat').val() || null;
+            if (repeat && !dueDate) dueDate = isoToday();
             let changed = false;
             if (commit && value && value !== task.text) { task.text = value; changed = true; }
             if (commit && priority !== task.priority) { task.priority = priority; changed = true; }
             if (commit && dueDate !== (task.dueDate || null)) { task.dueDate = dueDate; changed = true; }
+            if (commit && repeat !== (task.repeat || null)) { task.repeat = repeat; changed = true; }
             if (changed) { saveTasks(); updateStats(); showNotification('Task updated', 'success'); }
             $item.removeData('finishEdit').removeClass('editing');
             renderList();
@@ -403,6 +501,7 @@ $(document).ready(function () {
     function toggleTask(taskId) {
         const task = tasks.find(t => t.id == taskId);
         if (!task) return;
+        if (!task.completed && task.repeat && REPEAT_LABEL[task.repeat]) { completeRepeating(task); return; }
         task.completed = !task.completed;
         task.completedAt = task.completed ? Date.now() : null;
         saveTasks();
@@ -412,9 +511,33 @@ $(document).ready(function () {
         $taskItem.find('.task-checkbox').toggleClass('checked', task.completed);
         updateStats();
         showNotification(task.completed ? 'Task completed' : 'Task marked as active', task.completed ? 'success' : 'info');
+        announce(task.completed ? `Completed: ${task.text}` : `Active again: ${task.text}`);
 
         // let the tick land, then move the row into (or out of) the completed group
         setTimeout(() => renderList({ animate: true }), reduceMotion ? 0 : 220);
+    }
+
+    /** A repeating task is never "done": ticking it moves it to its next date. */
+    function completeRepeating(task) {
+        const previous = { dueDate: task.dueDate, completions: task.completions || 0, lastDone: task.lastDone || null };
+        const next = nextOccurrence(task.dueDate, task.repeat);
+        const $taskItem = $(`.task-item[data-task-id="${task.id}"]`);
+        $taskItem.find('.task-checkbox').addClass('checked');
+        task.dueDate = next;
+        task.completions = previous.completions + 1;
+        task.lastDone = Date.now();
+        saveTasks();
+        updateStats();
+        const label = dueInfo({ dueDate: next, completed: false });
+        const msg = `Done. Next ${label ? label.label.toLowerCase() : next}`;
+        announce(msg);
+        setTimeout(() => {
+            renderList({ animate: true });
+            showNotification(msg, 'success', {
+                action: 'Undo',
+                onAction() { Object.assign(task, previous); saveTasks(); updateStats(); renderList({ animate: true }); showNotification('Moved back', 'info'); },
+            });
+        }, reduceMotion ? 0 : 320);
     }
 
     /* ---------- removing tasks, with undo ---------- */
@@ -546,7 +669,6 @@ $(document).ready(function () {
         $activeTasks.text(active);
         $completedTasks.text(completed);
         $progressFill.css('width', `${progress}%`);
-        $progressText.text(`${progress}% Complete`);
         $('#big-percent').html(`${progress}<small>%</small>`);
         const pct = (n) => (total > 0 ? Math.round((n / total) * 100) : 0) + '%';
         $('#bar-total').css('width', total > 0 ? '100%' : '0%');
@@ -560,6 +682,9 @@ $(document).ready(function () {
         $('[data-count="high"]').text(high);
         $('[data-count="due"]').text(due);
         $('#list-count').text(total === 1 ? '1 task' : `${total} tasks`);
+        const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+        const doneToday = tasks.filter(t => (t.completed && t.completedAt >= dayStart) || (t.lastDone && t.lastDone >= dayStart)).length;
+        $('#done-today').html(doneToday ? `<b>${doneToday}</b> done today` : 'Nothing done yet today');
 
         // Update clear completed button state
         $clearCompletedBtn.prop('disabled', completed === 0);
@@ -613,15 +738,16 @@ $(document).ready(function () {
     }
 
     /* ---------- toasts ---------- */
-    let toastTimer = null;
     function showNotification(message, type = 'info', { action, onAction } = {}) {
         $('.notification').remove();
         clearTimeout(toastTimer);
+        pendingUndo = action === 'Undo' && onAction ? onAction : null;
 
         const $notification = $(`<div class="notification notification-${type}" role="status"><span></span></div>`);
         $notification.find('span').text(message);
         const hide = () => {
             $notification.removeClass('show');
+            pendingUndo = null;
             setTimeout(() => $notification.remove(), 300);
         };
         if (action) {
@@ -679,6 +805,7 @@ $(document).ready(function () {
                     completedAt: t.completed ? (t.completedAt || Date.now()) : null,
                     timestamp: t.timestamp || Date.now(),
                     dueDate: parseIso(t.dueDate) ? t.dueDate : null,
+                    repeat: REPEAT_LABEL[t.repeat] ? t.repeat : null,
                     pomodoros: t.pomodoros || 0,
                 }));
             if (!fresh.length) { showNotification('Nothing new to import', 'info'); return; }
@@ -693,12 +820,164 @@ $(document).ready(function () {
     /* ---------- keyboard shortcuts ---------- */
     function initShortcuts() {
         $(document).on('keydown', function (e) {
-            if (e.metaKey || e.ctrlKey || e.altKey) return;
             const $t = $(e.target);
-            if ($t.is('input, select, textarea, button, [contenteditable]')) return;
+            const inField = $t.is('input, select, textarea, [contenteditable]');
+            // undo the last delete, clear or repeat from the keyboard
+            if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && !inField) {
+                if (pendingUndo) { e.preventDefault(); const fn = pendingUndo; $('.notification').remove(); pendingUndo = null; fn(); }
+                return;
+            }
+            // arrows walk the list; Alt + arrows reorder the focused task
+            const $row = $t.closest('.task-item');
+            if ($row.length && !inField && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                e.preventDefault();
+                if (e.altKey) { moveTask($row, e.key === 'ArrowDown' ? 1 : -1); return; }
+                const rows = $('#task-list .task-item:visible').toArray();
+                const i = rows.indexOf($row[0]);
+                const next = rows[i + (e.key === 'ArrowDown' ? 1 : -1)];
+                if (next) { const same = $t.is('.task-checkbox, .focus-btn, .edit-btn, .delete-btn') ? $t.attr('class').split(' ')[0] : 'task-checkbox'; $(next).find(`.${same}`).focus(); }
+                return;
+            }
+            if (e.metaKey || e.ctrlKey || e.altKey) return;
+            if (inField || $t.is('button')) return;
             if (e.key === '/') { e.preventDefault(); $searchInput.focus(); }
             else if (e.key === 'n' || e.key === 'N') { e.preventDefault(); $newTaskInput.focus(); }
         });
+    }
+
+    /* ---------- reordering: drag the handle, or Alt + arrows ---------- */
+    function activeRows() { return $('#task-list .task-item:visible').not('.completed').toArray(); }
+    function commitOrderFromDom() {
+        const ids = $('#task-list .task-item').not('.completed').toArray().map(el => String(el.dataset.taskId));
+        const active = ids.map(id => tasks.find(t => String(t.id) === id)).filter(Boolean);
+        const hiddenActive = tasks.filter(t => !t.completed && !ids.includes(String(t.id)));
+        tasks = active.concat(hiddenActive, tasks.filter(t => t.completed));
+        saveTasks();
+    }
+    function moveTask($row, dir) {
+        if ($row.hasClass('completed')) return;
+        const rows = activeRows();
+        const i = rows.indexOf($row[0]);
+        const target = rows[i + dir];
+        if (!target) return;
+        const focused = document.activeElement;
+        const before = itemPositions();
+        if (dir > 0) $(target).after($row); else $(target).before($row);
+        commitOrderFromDom();
+        animateMoves(before);
+        if (focused && $row[0].contains(focused)) focused.focus();
+        const task = tasks.find(t => t.id == $row.data('task-id'));
+        announce(`${task ? task.text : 'Task'} moved to position ${rows.indexOf($row[0]) + dir + 1} of ${rows.length}`);
+    }
+    function initDrag() {
+        const list = $taskList[0];
+        let drag = null;
+        list.addEventListener('pointerdown', (e) => {
+            const handle = e.target.closest('.drag-handle');
+            if (!handle || (e.pointerType === 'mouse' && e.button !== 0)) return;
+            const row = handle.closest('.task-item');
+            if (!row || row.classList.contains('completed') || row.classList.contains('editing')) return;
+            e.preventDefault();
+            drag = { row, startY: e.clientY, shift: 0, pointerId: e.pointerId, moved: false, height: row.getBoundingClientRect().height };
+            handle.setPointerCapture(e.pointerId);
+        });
+        list.addEventListener('pointermove', (e) => {
+            if (!drag || e.pointerId !== drag.pointerId) return;
+            const dy = e.clientY - drag.startY;
+            if (!drag.moved) { if (Math.abs(dy) < 4) return; drag.moved = true; drag.row.classList.add('dragging'); document.body.classList.add('is-dragging'); }
+            drag.row.style.transform = `translateY(${dy - drag.shift}px)`;
+            const rows = activeRows();
+            const i = rows.indexOf(drag.row);
+            const next = rows[i + 1], prev = rows[i - 1];
+            if (next) {
+                const r = next.getBoundingClientRect();
+                if (e.clientY > r.top + r.height / 2) { slideNeighbour(next, drag.height); $(next).after(drag.row); drag.shift += r.height; drag.row.style.transform = `translateY(${dy - drag.shift}px)`; return; }
+            }
+            if (prev) {
+                const r = prev.getBoundingClientRect();
+                if (e.clientY < r.top + r.height / 2) { slideNeighbour(prev, -drag.height); $(prev).before(drag.row); drag.shift -= r.height; drag.row.style.transform = `translateY(${dy - drag.shift}px)`; }
+            }
+        });
+        const end = (e) => {
+            if (!drag || e.pointerId !== drag.pointerId) return;
+            const { row, moved } = drag;
+            drag = null;
+            document.body.classList.remove('is-dragging');
+            if (!moved) return;
+            row.style.transition = reduceMotion ? 'none' : 'transform 0.2s cubic-bezier(0.19, 1, 0.22, 1)';
+            row.style.transform = '';
+            setTimeout(() => { row.style.transition = ''; row.classList.remove('dragging'); }, 220);
+            commitOrderFromDom();
+            const rows = activeRows();
+            const task = tasks.find(t => t.id == row.dataset.taskId);
+            announce(`${task ? task.text : 'Task'} moved to position ${rows.indexOf(row) + 1} of ${rows.length}`);
+        };
+        list.addEventListener('pointerup', end);
+        list.addEventListener('pointercancel', end);
+        function slideNeighbour(el, from) {
+            if (reduceMotion) return;
+            el.style.transition = 'none';
+            el.style.transform = `translateY(${from}px)`;
+            void el.offsetHeight;
+            el.style.transition = 'transform 0.2s cubic-bezier(0.19, 1, 0.22, 1)';
+            el.style.transform = '';
+            el.addEventListener('transitionend', () => { el.style.transition = ''; }, { once: true });
+        }
+    }
+
+    /* ---------- send tasks to another device: everything travels inside the link ---------- */
+    async function encodeShare(list) {
+        const json = JSON.stringify(list.map(t => ({ id: t.id, text: t.text, priority: t.priority, completed: t.completed, completedAt: t.completedAt || null, timestamp: t.timestamp, dueDate: t.dueDate || null, repeat: t.repeat || null, pomodoros: t.pomodoros || 0 })));
+        const bytes = new TextEncoder().encode(json);
+        let payload = bytes, prefix = 'j';
+        if (typeof CompressionStream === 'function') {
+            const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+            payload = new Uint8Array(await new Response(stream).arrayBuffer());
+            prefix = 'z';
+        }
+        let bin = ''; payload.forEach(b => { bin += String.fromCharCode(b); });
+        return `${prefix}.${btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}`;
+    }
+    async function decodeShare(str) {
+        const [prefix, data] = str.split('.');
+        const bin = atob(data.replace(/-/g, '+').replace(/_/g, '/'));
+        let bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+        if (prefix === 'z') {
+            if (typeof DecompressionStream !== 'function') throw new Error('unsupported');
+            const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+            bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+        }
+        const parsed = JSON.parse(new TextDecoder().decode(bytes));
+        return Array.isArray(parsed) ? parsed.filter(isTask) : [];
+    }
+    function initShare() {
+        $('#share-btn').on('click', async function () {
+            if (!tasks.length) { showNotification('Nothing to send yet', 'info'); return; }
+            try {
+                const url = `${location.origin}${location.pathname}#tasks=${await encodeShare(tasks)}`;
+                await navigator.clipboard.writeText(url);
+                showNotification(`Link copied. Open it on the other device to get these ${tasks.length} tasks.`, 'success');
+            } catch (_) {
+                showNotification('Could not copy the link', 'error');
+            }
+        });
+        window.addEventListener('hashchange', checkHash);
+        checkHash();
+    }
+    function checkHash() {
+        const m = /[#&]tasks=([^&]+)/.exec(location.hash);
+        if (!m) return;
+        history.replaceState(null, '', location.pathname + location.search);
+        decodeShare(m[1]).then((incoming) => {
+            if (!incoming.length) return;
+            const $bar = $('#share-bar');
+            $bar.find('.share-text').text(`This link carries ${incoming.length} ${incoming.length === 1 ? 'task' : 'tasks'}.`);
+            $bar.prop('hidden', false);
+            $bar.find('button').off('click');
+            $bar.find('.share-merge').one('click', () => { $bar.prop('hidden', true); importTasks(JSON.stringify(incoming)); });
+            $bar.find('.share-replace').one('click', () => { $bar.prop('hidden', true); tasks = []; importTasks(JSON.stringify(incoming)); });
+            $bar.find('.share-dismiss').one('click', () => $bar.prop('hidden', true));
+        }).catch(() => showNotification('That link could not be read', 'error'));
     }
 
     /* ---------- focus sound (ambiently) ---------- */

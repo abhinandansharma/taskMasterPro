@@ -195,6 +195,21 @@ input, select { font: inherit; color: inherit; }
 .block-sand .pill:disabled { opacity: 0.4; }
 
 /* task list */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.hint-key.parsed { opacity: 1; font-weight: 500; }
+.progress-text b { font-family: var(--pixel); font-weight: 400; font-size: 1.1rem; }
+.drag-handle { flex: 0 0 auto; width: 1rem; margin-left: -0.35rem; display: inline-grid; place-items: center; color: var(--list-muted); cursor: grab; opacity: 0; touch-action: none; transition: opacity 0.15s; }
+.task-item:hover .drag-handle { opacity: 0.7; }
+.drag-handle:hover { opacity: 1 !important; }
+@media (hover: none) { .drag-handle { opacity: 0.5; } }
+.task-item.dragging { position: relative; z-index: 5; background: var(--list-bg); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35); border-radius: 12px; border-top-color: transparent; cursor: grabbing; }
+.task-item.dragging .drag-handle { cursor: grabbing; opacity: 1; }
+body.is-dragging { user-select: none; -webkit-user-select: none; cursor: grabbing; }
+.repeat-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.7rem; border-radius: 999px; border: 1px solid var(--list-line); font-size: 0.75rem; font-weight: 500; color: var(--list-muted); letter-spacing: 0.02em; white-space: nowrap; }
+.share-bar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin: 0 var(--pad) 0.25rem; padding: 0.7rem 0.9rem; border-radius: 14px; background: var(--lime); color: var(--ink); font-size: 0.9rem; font-weight: 500; }
+.share-bar .pill-sm { border-color: var(--ink); color: var(--ink); }
+.share-bar .pill-solid-list { background: var(--ink); color: var(--paper); }
+.share-actions { display: inline-flex; gap: 0.4rem; flex-wrap: wrap; }
 .task-group { display: flex; align-items: center; gap: 0.6rem; padding: 0.9rem var(--pad) 0.45rem; border-top: 1px solid var(--list-line); font-size: 0.8rem; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; color: var(--list-muted); }
 .task-group .count { font-family: var(--pixel); font-weight: 400; font-size: 1rem; color: var(--list-fg); letter-spacing: 0; text-transform: none; }
 .task-group + .task-item { border-top-color: transparent; }
@@ -298,6 +313,7 @@ input, select { font: inherit; color: inherit; }
     .task-item { align-items: flex-start; gap: 0.5rem; padding-right: 0.6rem; }
     .task-content { gap: 0.7rem; }
     .focus-btn, .edit-btn, .delete-btn { width: 1.9rem; height: 1.9rem; }
+    .drag-handle { margin-left: -0.2rem; }
     .task-checkbox { margin-top: 0.15rem; }
     .edit-btn, .delete-btn { margin-top: -0.2rem; }
 }
