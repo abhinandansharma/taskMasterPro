@@ -6,7 +6,7 @@ $(document).ready(function () {
     let currentFilter = 'all';
     let searchQuery = '';
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const PALETTES = { lime: 'Lime', dracula: 'Dracula', nord: 'Nord', catppuccin: 'Catppuccin' };
+    const PALETTES = { lime: 'Lime', dracula: 'Dracula', nord: 'Nord', catppuccin: 'Catppuccin', gruvbox: 'Gruvbox' };
     const REPEAT_LABEL = { daily: 'Daily', weekdays: 'Weekdays', weekly: 'Weekly', monthly: 'Monthly' };
     const WEEKDAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const WEEKDAY_SHORT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
