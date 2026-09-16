@@ -16,7 +16,7 @@ A jQuery task manager laid out as a dashboard of colour blocks: add tasks with a
 - **Undo.** Deleting a task or clearing the completed ones shows an Undo for six seconds.
 - **Progress.** Total, active and completed as bars, plus the completion figure set large.
 - **Focus timer.** 25-minute focus sessions with 5-minute breaks and a 15-minute break every fourth session. Use the target on a task to link it; finished sessions are counted on that task, a chime plays, the tab title shows the countdown, and a system notification fires if the tab is in the background.
-- **Focus sound.** Rain, fireplace, ocean, wind, night, brown noise, a lo-fi beat, lo-fi with rain, or a soft pad, played by [ambiently](https://www.npmjs.com/package/ambiently) while a focus session runs. All synthesised, nothing to download.
+- **Background sound.** Rain, fireplace, ocean, wind, night, brown noise, a lo-fi beat, lo-fi with rain, or a soft pad, played by [ambiently](https://www.npmjs.com/package/ambiently) from the moment you pick one until you pick Off. All synthesised, nothing to download.
 - **Backup.** Export your tasks as JSON from the footer and import them on another browser.
 - **Installable and offline.** A web app manifest and a service worker: add it to your home screen or dock, and it opens without a connection.
 - **Two themes.** Dark by default, light with one dark panel. The choice is remembered.
@@ -32,7 +32,7 @@ A jQuery task manager laid out as a dashboard of colour blocks: add tasks with a
 
 ## Stack
 
-Plain HTML, CSS and jQuery 3.5. No build step. Space Grotesk for text and [Geist Pixel](https://vercel.com/font) (Square) for the numerals, self-hosted. The focus sound is the [ambiently](https://github.com/abhinandansharma/ambiently) engine, vendored from the npm package as `assets/JS/lib/ambiently-1.0.0.js` and imported on first use. Tasks live in `localStorage` under `taskmaster.tasks`, the timer under `taskmaster.pomodoro`, the sound choice under `taskmaster.sound`.
+Plain HTML, CSS and jQuery 3.5. No build step. Space Grotesk for text and [Geist Pixel](https://vercel.com/font) (Square) for the numerals, self-hosted. The focus sound is the [ambiently](https://github.com/abhinandansharma/ambiently) engine, vendored from the npm package as `assets/JS/lib/ambiently-1.0.0.js` and imported on first use. Tasks live in `localStorage` under `taskmaster.tasks`, the timer under `taskmaster.pomodoro`, the sound volume under `taskmaster.sound`.
 
 ## Run it locally
 

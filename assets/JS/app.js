@@ -708,18 +708,17 @@ $(document).ready(function () {
         if (!$select.length) return;
         const sound = window.TMSound;
         if (!sound) { $('.pomo-sound').hide(); return; }
+        // Browsers do not allow audio before a click, so every visit starts silent with the volume remembered.
         let saved = {};
         try { saved = JSON.parse(localStorage.getItem(SOUND_KEY) || '{}') || {}; } catch (_) { /* ignore */ }
-        const id = sound.ids.includes(saved.id) ? saved.id : 'off';
         const vol = typeof saved.volume === 'number' ? saved.volume : 0.6;
-        $select.val(id);
+        $select.val('off');
         $volume.val(vol);
         sound.setVolume(vol);
-        sound.select(id, { preview: false });
-        const persist = () => { try { localStorage.setItem(SOUND_KEY, JSON.stringify({ id: $select.val(), volume: Number($volume.val()) })); } catch (_) { /* ignore */ } };
-        $select.on('change', function () { sound.select($(this).val()); persist(); });
+        const persist = () => { try { localStorage.setItem(SOUND_KEY, JSON.stringify({ volume: Number($volume.val()) })); } catch (_) { /* ignore */ } };
+        $select.on('change', function () { sound.select($(this).val()); });
         $volume.on('input', function () { sound.setVolume($(this).val()); persist(); });
-        pomodoro.refresh();
+        window.addEventListener('pagehide', () => sound.stop());
     }
 
     function registerServiceWorker() {
@@ -741,7 +740,6 @@ $(document).ready(function () {
         const $dots = $('#pomo-dots i');
         const baseTitle = document.title;
         let timer = null;
-        let soundRunning = null;
 
         let state = {
             mode: 'focus', remaining: DURATION.focus, running: false, endAt: null,
@@ -779,8 +777,6 @@ $(document).ready(function () {
             $('.task-item').removeClass('focused');
             if (t) $(`.task-item[data-task-id="${t.id}"]`).addClass('focused');
             document.title = state.running ? `${fmt(state.remaining)} · ${LABEL[state.mode]} — ${baseTitle}` : baseTitle;
-            const focusRunning = state.running && state.mode === 'focus';
-            if (focusRunning !== soundRunning) { soundRunning = focusRunning; if (window.TMSound) window.TMSound.setRunning(focusRunning); }
         }
 
         function tick() {
