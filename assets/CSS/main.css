@@ -376,18 +376,15 @@ body.is-dragging { user-select: none; -webkit-user-select: none; cursor: grabbin
     .edit-btn, .delete-btn { margin-top: -0.2rem; }
 }
 
-/* made-by badge (identical across every project; keep in sync) */
-.made-by { position: fixed; left: 18px; bottom: 18px; z-index: 950; display: inline-flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 999px; background: #0b0b0b; color: #f1ede4; border: 1px solid #262626; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 400; line-height: 1; letter-spacing: 0; text-decoration: none; transition: background-color 0.2s, opacity 0.3s; }
+/* made-by badge (identical across every project; keep in sync). It lives in the page footer, never fixed, so it covers nothing. */
+.made-by { display: inline-flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 999px; background: #0b0b0b; color: #f1ede4; border: 1px solid #262626; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 400; line-height: 1; letter-spacing: 0; text-decoration: none; white-space: nowrap; flex: 0 0 auto; transition: background-color 0.2s, opacity 0.3s; }
 .made-by b { font-weight: 600; color: inherit; }
 .made-by-mark { display: block; border-radius: 6px; transition: transform 0.25s cubic-bezier(0.19, 1, 0.22, 1); }
 .made-by:hover { background: #1c1c1c; color: #f1ede4; }
 .made-by:hover .made-by-mark { transform: rotate(-8deg) scale(1.08); }
-@media (max-width: 560px) { .made-by { left: 12px; bottom: 12px; } }
-/* On this page the badge lives in the footer flow instead of a fixed corner: the left column is all controls,
-   and a pinned badge covered them while scrolling. The footer is pushed to the viewport bottom on short pages,
-   so the badge still sits bottom-left when nothing scrolls. The pill itself is unchanged. */
+/* the footer is pushed to the viewport bottom on short pages, so the badge sits bottom-left when nothing scrolls */
 .app-footer { align-items: center; margin-top: auto; }
-.app-footer .made-by { position: static; margin-right: auto; }
+.app-footer .made-by { margin-right: auto; }
 .footer-left { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
 .app-footer { opacity: 1; }
 .app-footer > span > span:first-child, .app-footer > a:not(.made-by) { opacity: 0.55; }
