@@ -323,7 +323,7 @@ body.is-dragging { user-select: none; -webkit-user-select: none; cursor: grabbin
 .empty-state p, .no-search-results p { margin: 0; }
 
 .app-footer { display: flex; justify-content: flex-end; gap: 1rem; padding: 0.5rem 0.4rem 1rem; font-size: 0.8rem; color: var(--chrome); opacity: 0.55; }
-.app-footer a, .link-btn { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.app-footer a:not(.made-by), .link-btn { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .link-btn { padding: 0; border: 0; background: transparent; font: inherit; opacity: 0.55; transition: opacity 0.15s; }
 .link-btn:hover { opacity: 1; }
 
@@ -349,6 +349,10 @@ body.is-dragging { user-select: none; -webkit-user-select: none; cursor: grabbin
     .side { order: 3; }
     .block-list { order: 2; }
     .search-container { width: min(100%, 12rem); }
+}
+@media (max-width: 640px) {
+    .app-footer { flex-wrap: wrap; row-gap: 0.6rem; }
+    .footer-left { justify-content: flex-end; row-gap: 0.35rem; }
 }
 @media (max-width: 560px) {
     .app-container { padding: 0.6rem; }
@@ -379,7 +383,11 @@ body.is-dragging { user-select: none; -webkit-user-select: none; cursor: grabbin
 .made-by:hover { background: #1c1c1c; color: #f1ede4; }
 .made-by:hover .made-by-mark { transform: rotate(-8deg) scale(1.08); }
 @media (max-width: 560px) { .made-by { left: 12px; bottom: 12px; } }
-.app-footer { align-items: center; }
+/* On this page the badge lives in the footer flow instead of a fixed corner: the left column is all controls,
+   and a pinned badge covered them while scrolling. The footer is pushed to the viewport bottom on short pages,
+   so the badge still sits bottom-left when nothing scrolls. The pill itself is unchanged. */
+.app-footer { align-items: center; margin-top: auto; }
+.app-footer .made-by { position: static; margin-right: auto; }
 .footer-left { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
 .app-footer { opacity: 1; }
-.app-footer > span > span:first-child, .app-footer > a { opacity: 0.55; }
+.app-footer > span > span:first-child, .app-footer > a:not(.made-by) { opacity: 0.55; }
