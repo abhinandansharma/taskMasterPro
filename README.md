@@ -23,7 +23,7 @@ A jQuery task manager laid out as a dashboard of colour blocks: type tasks in pl
 - **Send to another device.** "Send to device" in the footer copies a link that carries all your tasks, compressed into the address. Open it on your phone or another browser and choose to add them to what is there or replace it. No account, no server.
 - **Backup.** Export your tasks as JSON from the footer and import them on another browser.
 - **Installable and offline.** A web app manifest and a service worker: add it to your home screen or dock, and it opens without a connection.
-- **Four palettes, each in dark and light.** Lime (the default), Dracula, Nord and Catppuccin (Mocha, or Latte in light mode). Every palette stays one accent plus neutrals, so the app never looks like a different product. Picked from the top bar and remembered, and applied before the first paint so nothing flashes.
+- **Five palettes, each in dark and light.** Lime (the default), Dracula, Nord, Catppuccin (Mocha, or Latte in light mode) and Lord's (antique gold on warm beige, by [@Lord-V15](https://github.com/Lord-V15)). Every palette stays one accent plus neutrals, so the app never looks like a different product. Picked from the top bar and remembered, and applied before the first paint so nothing flashes.
 - **Keyboard and screen readers.** Enter adds a task, `n` jumps to the input, `/` to the search, Escape clears it or cancels an edit, Space starts or pauses the timer, arrows walk the list, Alt+arrows reorder, Cmd/Ctrl+Z undoes. Moves, completions and repeats are announced to assistive tech.
 
 ## Light mode

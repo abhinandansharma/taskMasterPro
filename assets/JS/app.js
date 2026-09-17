@@ -6,7 +6,9 @@ $(document).ready(function () {
     let currentFilter = 'all';
     let searchQuery = '';
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const PALETTES = { lime: 'Lime', dracula: 'Dracula', nord: 'Nord', catppuccin: 'Catppuccin', gruvbox: 'Gruvbox' };
+    const PALETTES = { lime: 'Lime', dracula: 'Dracula', nord: 'Nord', catppuccin: 'Catppuccin', lords: "Lord's" };
+    /* Renamed palettes, so a stored preference still resolves. */
+    const PALETTE_ALIAS = { gruvbox: 'lords' };
     const REPEAT_LABEL = { daily: 'Daily', weekdays: 'Weekdays', weekly: 'Weekly', monthly: 'Monthly' };
     const WEEKDAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const WEEKDAY_SHORT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -1002,9 +1004,10 @@ $(document).ready(function () {
         window.addEventListener('pagehide', () => sound.stop());
     }
 
-    /* ---------- palettes: Lime, Dracula, Nord, Catppuccin, each with a light mode ---------- */
+    /* ---------- palettes: Lime, Dracula, Nord, Catppuccin, Lord's, each with a light mode ---------- */
     function applyPalette(id) {
-        const key = PALETTES[id] ? id : 'lime';
+        const resolved = PALETTE_ALIAS[id] || id;
+        const key = PALETTES[resolved] ? resolved : 'lime';
         if (key === 'lime') document.documentElement.removeAttribute('data-palette');
         else document.documentElement.setAttribute('data-palette', key);
         $('#palette-name').text(PALETTES[key]);

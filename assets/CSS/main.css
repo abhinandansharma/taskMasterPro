@@ -92,25 +92,34 @@
     --toast-bg: #4c4f69; --toast-fg: #eff1f5;
 }
 
-/* Gruvbox */
-[data-palette="gruvbox"] {
-    --canvas: #282828; --chrome: #ebdbb2;
+/* Lord's — antique gold accent over a warm gruvbox-derived bg ramp, in both modes. */
+[data-palette="lords"] {
+    --canvas: #1d2021; --chrome: #ebdbb2;
     --ink: #282828; --paper: #ebdbb2;
-    --lime: #fabd2f; --accent-ink: #282828; --accent-paper: #ebdbb2;
-    --bone: #3c3836; --bone-ink: #ebdbb2; --bone-paper: #282828; --bone-bar: #fabd2f; --bone-number: #fabd2f;
+    --lime: #d8a657; --accent-ink: #282828; --accent-paper: #fbf1c7;
+    --bone: #3c3836; --bone-ink: #ebdbb2; --bone-paper: #282828; --bone-bar: #d8a657; --bone-number: #d8a657;
     --sand: #504945; --sand-ink: #ebdbb2; --sand-paper: #282828;
-    --charcoal: #1d2021; --charcoal-fg: #ebdbb2; --charcoal-ink: #282828; --charcoal-line: #3c3836; --charcoal-muted: #a89984;
-    --list-bg: #32302f; --list-fg: #ebdbb2; --list-muted: #a89984; --list-line: #3c3836;
-    --high: #fabd2f; --medium: #d5c4a1; --low: #7c6f64;
+    --charcoal: #3c3836; --charcoal-fg: #ebdbb2; --charcoal-ink: #282828; --charcoal-line: #504945; --charcoal-muted: #bdae93;
+    --list-bg: #32302f; --list-fg: #ebdbb2; --list-muted: #a89984; --list-line: #45403d;
+    --high: #ea6962; --medium: #d8a657; --low: #a89984;
     --toast-bg: #ebdbb2; --toast-fg: #282828;
 }
-[data-palette="gruvbox"][data-theme="dark"] {
-    --canvas: #fbf1c7; --chrome: #282828;
-    --bone: #282828; --sand: #d5c4a1; --sand-ink: #282828; --sand-paper: #ebdbb2;
-    --list-bg: #ffffff; --list-fg: #282828; --list-muted: #7c6f64; --list-line: #ebe1c0;
-    --medium: #bdae93; --low: #a89984;
+[data-palette="lords"][data-theme="dark"] {
+    /* Built on the gruvbox light bg ramp: bg1 canvas, bg2 cards, bg3 hairlines. */
+    --canvas: #f2e5bc; --chrome: #3c3836;
+    --ink: #282828; --paper: #fbf1c7;
+    --lime: #cd9a3c; --accent-ink: #282828; --accent-paper: #fbf1c7;
+    /* Progress and Focus timer keep their dark-mode surface (#3c3836) here, so the
+       two dark cards read identically in both modes — inherited, not re-declared. */
+    --sand: #d5c4a1; --sand-ink: #282828; --sand-paper: #fbf1c7;
+    --list-bg: #d5c4a1; --list-fg: #282828; --list-muted: #574f4a; --list-line: #bdae93;
+    --high: #b0342f; --medium: #8f6300; --low: #6f6257;
     --toast-bg: #282828; --toast-fg: #ebdbb2;
 }
+/* On the dark cards that survive into light mode, use the brighter gold so the
+   timer digits and progress bars keep glowing. */
+[data-palette="lords"][data-theme="dark"] .block-charcoal,
+[data-palette="lords"][data-theme="dark"] .block-bone { --lime: #d8a657; }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
